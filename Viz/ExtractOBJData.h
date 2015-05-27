@@ -512,21 +512,21 @@ public:
 //                memcpy(l, line.c_str(), line.size()+1);
            //     printf("%s\n",line.c_str());
                 replace(line.begin(), line.end(), '/', ' ');
-            //     printf("%s\n",line.c_str());
+             //   printf("%s\n",line.c_str());
                 istringstream ls(line);
                 int vi1, vti1, vi2, vti2, vi3, vti3;
                 string ss;
                 ls>>ss;
                 ls >> vi1 >> vti1 >> vi2 >> vti2 >> vi3 >> vti3;
-            //    printf("vti1 %d  vti2 %d vit3 %d\n",vi1 ,  vi2 ,vi3);
+            //   printf("vti1 %d  vti2 %d vit3 %d\n",vi1 ,  vi2 ,vi3);
                 faces_texel.push_back(cv::Point3i(vti1-1, vti2-1,vti3-1));
                 faces_vertex.push_back(cv::Point3i( vi1-1,vi2-1,vi3-1));
                 
                 if(ls.peek()==' '){
                     int vi4, vti4;
 					ls >> vi4 >> vti4;
-                    faces_vertex.push_back(cv::Point3i(vi1, vi3,vi4));
-                    faces_texel.push_back(cv::Point3i( vti1,vti3,vti4));
+                    faces_vertex.push_back(cv::Point3i(vi1-1, vi3-1,vi4-1));
+                    faces_texel.push_back(cv::Point3i( vti1-1,vti3-1,vti4-1));
                 }
                 
                 
@@ -552,7 +552,158 @@ public:
         inOBJ.close();
         
     }
-   
+ 
+//    cv::Point3f getNormal(const cv::Point3f& v1, const cv::Point3f& v2, const cv::Point3f& v3) {
+//        cv::Point3f a = v1 - v2;
+//        cv::Point3f b = v3 - v2;
+//        cv::Point3f normal = b.cross(a);
+//       
+//        float length = (float)sqrt(normal.x*normal.x + normal.y*normal.y + normal.z*normal.z);
+//        if( length > 0 ) {
+//            normal.x /= length;
+//            normal.y /= length;
+//            normal.z /= length;
+//     
+//        return normal;
+//    }
+//        
+//    void buildFaceNormals( std::vector<cv::Point3d> &positionscv,std::vector<cv::Point3i> &faces_vertex,
+//                          std::vector<cv::Point3i> &faces_normal,std::vector<cv::Point3d> &normalscv,)
+//    {
+//        for (int i=0; i<faces_vertex.size(); i++) {
+//           faces_vertex[i]
+//            cv::Point3f normal = getNormal(positionscv[i]., mesh.getVertices()[i1], mesh.getVertices()[i2]);
+//        }
+//    }
+    void extractOBJdata5(string fp,  std::vector<cv::Point3d> &positionscv,
+                         std::vector<cv::Point2d> &texelscv,
+                         std::vector<cv::Point3d> &normalscv,
+                         std::vector<cv::Point3i> &faces_vertex,
+                         std::vector<cv::Point3i> &faces_texel,
+                         std::vector<cv::Point3i> &faces_normal)
+    {
+        
+        
+        float positions[model.positions][3];    // XYZ
+        float texels[model.texels][2];          // UV
+        float normals[model.normals][3];        // XYZ
+        int faces[model.faces][9];              // PTN PTN PTN
+        
+        // Counters
+        int p = 0;
+        int t = 0;
+        int n = 0;
+        int f = 0;
+        
+        // Open OBJ file
+        ifstream inOBJ;
+        inOBJ.open(fp);
+        if(!inOBJ.good())
+        {
+            cout << "ERROR OPENING OBJ FILE" << endl;
+            exit(1);
+        }
+        
+        // Read OBJ file
+        while(!inOBJ.eof())
+        {
+            string line;
+            getline(inOBJ, line);
+            string type = line.substr(0,2);
+            
+            // Positions
+            if(type.compare("v ") == 0)
+            {
+                // Copy line for parsing
+                char* l = new char[line.size()+1];
+                memcpy(l, line.c_str(), line.size()+1);
+                
+                // Extract tokens
+                strtok(l, " ");
+                for(int i=0; i<3; i++)
+                    positions[p][i] = atof(strtok(NULL, " "));
+                positionscv.push_back(cv::Point3d(positions[p][0],positions[p][1],positions[p][2]));
+                // printf("%f %f %f\n",positions[p][0],positions[p][1],positions[p][2]);
+                // Wrap up
+                delete[] l;
+                p++;
+            }
+            
+            // Texels
+            else if(type.compare("vt") == 0)
+            {
+                char* l = new char[line.size()+1];
+                memcpy(l, line.c_str(), line.size()+1);
+                
+                strtok(l, " ");
+                for(int i=0; i<2; i++)
+                    texels[t][i] = atof(strtok(NULL, " "));
+                texelscv.push_back(cv::Point2d(texels[t][0],texels[t][1]));
+                delete[] l;
+                t++;
+            }
+            
+            // Normals
+            else if(type.compare("vn") == 0)
+            {
+                char* l = new char[line.size()+1];
+                memcpy(l, line.c_str(), line.size()+1);
+                
+                strtok(l, " ");
+                for(int i=0; i<3; i++)
+                    normals[n][i] = atof(strtok(NULL, " "));
+                normalscv.push_back(cv::Point3d(normals[n][0],normals[n][1],normals[n][2]));
+                delete[] l;
+                n++;
+            }
+            
+            // Faces
+            else if(type.compare("f ") == 0)
+            {
+                //                char* l = new char[line.size()+1];
+                //                memcpy(l, line.c_str(), line.size()+1);
+                //     printf("%s\n",line.c_str());
+                replace(line.begin(), line.end(), '/', ' ');
+                //   printf("%s\n",line.c_str());
+                istringstream ls(line);
+                int vi1, vti1 ,vnor1, vi2, vti2,vnor2, vi3, vti3,vnor3;
+                string ss;
+                ls>>ss;
+                ls >> vi1 >> vti1 >>vnor1>> vi2 >> vti2 >>vnor2>> vi3 >> vti3>>vnor3;
+                //   printf("vti1 %d  vti2 %d vit3 %d\n",vi1 ,  vi2 ,vi3);
+                faces_texel.push_back(cv::Point3i(vti1-1, vti2-1,vti3-1));
+                faces_vertex.push_back(cv::Point3i( vi1-1,vi2-1,vi3-1));
+                
+                if(ls.peek()==' '){
+                    int vi4, vti4;
+                    ls >> vi4 >> vti4;
+                    faces_vertex.push_back(cv::Point3i(vi1-1, vi3-1,vi4-1));
+                    faces_texel.push_back(cv::Point3i( vti1-1,vti3-1,vti4-1));
+                }
+                
+                
+                //                strtok(l, " ");
+                //                for(int i=0; i<9; i++)
+                //                    faces[f][i] = atof(strtok(NULL, " /"));
+                //                faces_vertex.push_back(cv::Point3i( faces[f][0]-1, faces[f][3]-1,faces[f][6]-1));
+                //                faces_texel.push_back(cv::Point3i( faces[f][1]-1, faces[f][4]-1,faces[f][7]-1));
+                //                faces_normal.push_back(cv::Point3i( faces[f][2]-1, faces[f][5]-1,faces[f][8]-1));
+                
+                //                    for(int i=0; i<6; i++)
+                //                        faces[f][i] = atof(strtok(NULL, " //"));
+                //                    faces_vertex.push_back(cv::Point3i( faces[f][0]-1, faces[f][2]-1,faces[f][4]-1));
+                //                    faces_texel.push_back(cv::Point3i( faces[f][1]-1, faces[f][3]-1,faces[f][5]-1));
+                //                    //  faces_normal.push_back(cv::Point3i( faces[f][2]-1, faces[f][5]-1,faces[f][8]-1));
+                
+                //   delete[] l;
+                f++;
+            }
+        }
+        //  printf("%d",p);
+        // Close OBJ file
+        inOBJ.close();
+        
+    }
     
     
     void writeCvertices(string fp, string name, Model model)
