@@ -1,6 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <unistd.h>
+#include "utils.hpp"
 
 #include <opencv2/opencv.hpp>
 
@@ -93,43 +91,39 @@ void Pose_of_a_widget()
     }
 }
 
-size_t split_str(const std::string &txt, std::vector<std::string> &strs, char ch)
-{
-    size_t pos = txt.find(ch);
-    size_t initialPos = 0;
-    strs.clear();
-
-    // Decompose statement
-    while (pos != std::string::npos)
-    {
-        strs.push_back(txt.substr(initialPos, pos - initialPos));
-        initialPos = pos + 1;
-        while(txt[initialPos] == ch)
-        {
-            initialPos++;
-        }
-        pos = txt.find(ch, initialPos);
-    }
-
-    // Add the last one
-    strs.push_back(txt.substr(initialPos, std::min(pos, txt.size()) - initialPos + 1));
-
-    return strs.size();
-}
-
-size_t lines(string &obj_file_path)
+void cvpolygons_load(Mat &polygons, string &obj_file_path)
 {
     ifstream ifs(obj_file_path, ifstream::in);
+
+    Point3f *data = polygons.ptr<cv::Point3f>();
+    float x = 0.f;
+    float y = 0.f;
+    float z = 0.f;
+
     string str;
-    size_t n = 0;
-    while(ifs.good())
+    int n = 0;
+    while (ifs.good())
     {
         getline(ifs, str);
-        if (string::npos == str.find("v "))
+        cout << str << endl;
+
+        if (string::npos == str.find("f "))
             continue;
+        vector<string> strs;
+        split_str(str, strs, ' ');
+
+        data->x = stof(strs[1]);
+        data->y = stof(strs[2]);
+        data->z = stof(strs[3]);
+        x += data->x;
+        y += data->y;
+        z += data->z;
+        cout << data->x << ", " << data->y << ", " << data->z << endl;
+        data++;
         n++;
     }
-    return n;
+
+    ifs.close();
 }
 
 void cvcloud_load(Mat &cloud, string &obj_file_path)
@@ -200,11 +194,12 @@ int transformations(string &obj_file_path)
     Affine3f transform = viz::makeTransformToGlobal(Vec3f(0.0f, -1.0f, 0.0f), Vec3f(-1.0f, 0.0f, 0.0f), Vec3f(0.0f, 0.0f, -1.0f), cam_pos);
 
     // Create a cloud widget.
-    Mat bunny_cloud(1, lines(obj_file_path), CV_32FC3);
+    Mat bunny_cloud(1, lines(obj_file_path, string("v ")), CV_32FC3);
     cvcloud_load(bunny_cloud, obj_file_path);
-    cout << "out of cvcloud_load" << endl;
+
+    cout << "out of cvpolygons_load" << endl;
     viz::WCloud cloud_widget(bunny_cloud, viz::Color::green());
-    cout << "line 205" << endl;
+    cout << "line 202" << endl;
     // Pose of the widget in camera frame
     Affine3f cloud_pose = Affine3f().translate(Vec3f(0.0f, 0.0f, 3.0f));
     // Pose of the widget in global frame
