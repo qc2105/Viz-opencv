@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <unistd.h>
 
 #include <opencv2/opencv.hpp>
 
@@ -10,131 +11,80 @@
 
 using namespace cv;
 using namespace std;
-#define CV_VERSION_NUMBER CVAUX_STR(CV_MAJOR_VERSION) CVAUX_STR(CV_MINOR_VERSION) CVAUX_STR(CV_SUBMINOR_VERSION)
-
-
-#ifdef _DEBUG
-#pragma comment(lib, "opencv_viz"CV_VERSION_NUMBER"d.lib")
-#pragma comment(lib, "opencv_videostab"CV_VERSION_NUMBER"d.lib")
-#pragma comment(lib, "opencv_video"CV_VERSION_NUMBER"d.lib")
-#pragma comment(lib, "opencv_ts"CV_VERSION_NUMBER"d.lib")
-#pragma comment(lib, "opencv_superres"CV_VERSION_NUMBER"d.lib")
-#pragma comment(lib, "opencv_stitching"CV_VERSION_NUMBER"d.lib")
-#pragma comment(lib, "opencv_photo"CV_VERSION_NUMBER"d.lib")
-#pragma comment(lib, "opencv_ocl"CV_VERSION_NUMBER"d.lib")
-#pragma comment(lib, "opencv_objdetect"CV_VERSION_NUMBER"d.lib")
-#pragma comment(lib, "opencv_nonfree"CV_VERSION_NUMBER"d.lib")
-#pragma comment(lib, "opencv_ml"CV_VERSION_NUMBER"d.lib")
-#pragma comment(lib, "opencv_legacy"CV_VERSION_NUMBER"d.lib")
-#pragma comment(lib, "opencv_imgproc"CV_VERSION_NUMBER"d.lib")
-#pragma comment(lib, "opencv_highgui"CV_VERSION_NUMBER"d.lib")
-//#pragma comment(lib, "opencv_haartraining_engine.lib")
-#pragma comment(lib, "opencv_gpu"CV_VERSION_NUMBER"d.lib")
-#pragma comment(lib, "opencv_flann"CV_VERSION_NUMBER"d.lib")
-#pragma comment(lib, "opencv_features2d"CV_VERSION_NUMBER"d.lib")
-#pragma comment(lib, "opencv_core"CV_VERSION_NUMBER"d.lib")
-#pragma comment(lib, "opencv_contrib"CV_VERSION_NUMBER"d.lib")
-#pragma comment(lib, "opencv_calib3d"CV_VERSION_NUMBER"d.lib")
-#else
-#pragma comment(lib, "opencv_viz"CV_VERSION_NUMBER".lib")
-#pragma comment(lib, "opencv_videostab"CV_VERSION_NUMBER".lib")
-#pragma comment(lib, "opencv_video"CV_VERSION_NUMBER".lib")
-#pragma comment(lib, "opencv_ts"CV_VERSION_NUMBER".lib")
-#pragma comment(lib, "opencv_superres"CV_VERSION_NUMBER".lib")
-#pragma comment(lib, "opencv_stitching"CV_VERSION_NUMBER".lib")
-#pragma comment(lib, "opencv_photo"CV_VERSION_NUMBER".lib")
-#pragma comment(lib, "opencv_ocl"CV_VERSION_NUMBER".lib")
-#pragma comment(lib, "opencv_objdetect"CV_VERSION_NUMBER".lib")
-#pragma comment(lib, "opencv_nonfree"CV_VERSION_NUMBER".lib")
-#pragma comment(lib, "opencv_ml"CV_VERSION_NUMBER".lib")
-#pragma comment(lib, "opencv_legacy"CV_VERSION_NUMBER".lib")
-#pragma comment(lib, "opencv_imgproc"CV_VERSION_NUMBER".lib")
-#pragma comment(lib, "opencv_highgui"CV_VERSION_NUMBER".lib")
-//#pragma comment(lib, "opencv_haartraining_engine.lib")
-#pragma comment(lib, "opencv_gpu"CV_VERSION_NUMBER".lib")
-#pragma comment(lib, "opencv_flann"CV_VERSION_NUMBER".lib")
-#pragma comment(lib, "opencv_features2d"CV_VERSION_NUMBER".lib")
-#pragma comment(lib, "opencv_core"CV_VERSION_NUMBER".lib")
-#pragma comment(lib, "opencv_contrib"CV_VERSION_NUMBER".lib")
-#pragma comment(lib, "opencv_calib3d"CV_VERSION_NUMBER".lib")
-#endif
-
-
+#define CV_VERSION_NUMBER       \
+    CVAUX_STR(CV_MAJOR_VERSION) \
+    CVAUX_STR(CV_MINOR_VERSION) \
+    CVAUX_STR(CV_SUBMINOR_VERSION)
 
 void launching_Viz()
 {
-    /// Create a window
+    // Create a window
     viz::Viz3d myWindow("Viz Demo");
 
-    /// Start event loop
+    // Start event loop
     myWindow.spin();
 
-    /// Event loop is over when pressed q, Q, e, E
+    // Event loop is over when pressed q, Q, e, E
     cout << "First event loop is over" << endl;
 
-    /// Access window via its name
+    // Access window via its name
     viz::Viz3d sameWindow = viz::getWindowByName("Viz Demo");
 
-    /// Start event loop
+    // Start event loop
     sameWindow.spin();
 
-    /// Event loop is over when pressed q, Q, e, E
+    // Event loop is over when pressed q, Q, e, E
     cout << "Second event loop is over" << endl;
 
-    /// Event loop is over when pressed q, Q, e, E
-    /// Start event loop once for 1 millisecond
+    // Event loop is over when pressed q, Q, e, E
+    // Start event loop once for 1 millisecond
     sameWindow.spinOnce(1, true);
-    while(!sameWindow.wasStopped())
+    while (!sameWindow.wasStopped())
     {
-        /// Interact with window
+        // Interact with window
 
-        /// Event loop for 1 millisecond
+        // Event loop for 1 millisecond
         sameWindow.spinOnce(1, true);
     }
 
-    /// Once more event loop is stopped
+    // Once more event loop is stopped
     cout << "Last event loop is over" << endl;
 }
 
 void Pose_of_a_widget()
 {
-	/// ウィンドウの作成
+
     viz::Viz3d myWindow("Coordinate Frame");
 
-    /// ３色の３次元座標軸をセット
     myWindow.showWidget("Coordinate Widget", viz::WCoordinateSystem());
 
-    /// (1,1,1) ベクトル方向へ白いラインをセット
-    viz::WLine axis(Point3f(-1.0f,-1.0f,-1.0f), Point3f(1.0f,1.0f,1.0f));
+    viz::WLine axis(Point3f(-1.0f, -1.0f, -1.0f), Point3f(1.0f, 1.0f, 1.0f));
     axis.setRenderingProperty(viz::LINE_WIDTH, 4.0);
     myWindow.showWidget("Line Widget", axis);
 
-    /// 立方体を表示
-    viz::WCube cube_widget(Point3f(0.5,0.5,0.0), Point3f(0.0,0.0,-0.5), true, viz::Color::blue());
+    viz::WCube cube_widget(Point3f(0.5, 0.5, 0.0), Point3f(0.0, 0.0, -0.5), true, viz::Color::blue());
     cube_widget.setRenderingProperty(viz::LINE_WIDTH, 4.0);
 
-    /// ディスプレイにセットしたものを表示
     myWindow.showWidget("Cube Widget", cube_widget);
 
-    /// 回転ベクトルの設定
-    Mat rot_vec = Mat::zeros(1,3,CV_32F);
+    Mat rot_vec = Mat::zeros(1, 3, CV_32F);
     float translation_phase = 0.0, translation = 0.0;
-    while(!myWindow.wasStopped())
+    while (!myWindow.wasStopped())
     {
         /* Rotation using rodrigues */
-        /// Rotate around (1,1,1)
-        rot_vec.at<float>(0,0) += CV_PI * 0.01f;
-        rot_vec.at<float>(0,1) += CV_PI * 0.01f;
-        rot_vec.at<float>(0,2) += CV_PI * 0.01f;
+        // Rotate around (1,1,1)
+        rot_vec.at<float>(0, 0) += CV_PI * 0.01f;
+        rot_vec.at<float>(0, 1) += CV_PI * 0.01f;
+        rot_vec.at<float>(0, 2) += CV_PI * 0.01f;
 
-        /// Shift on (1,1,1)
+        // Shift on (1,1,1)
         translation_phase += CV_PI * 0.01f;
         translation = sin(translation_phase);
 
         Mat rot_mat;
         Rodrigues(rot_vec, rot_mat);
 
-        /// Construct pose
+        // Construct pose
         Affine3f pose(rot_mat, Vec3f(translation, translation, translation));
 
         myWindow.setWidgetPose("Cube Widget", pose);
@@ -143,112 +93,161 @@ void Pose_of_a_widget()
     }
 }
 
-
-Mat cvcloud_load()
+size_t split_str(const std::string &txt, std::vector<std::string> &strs, char ch)
 {
-    Mat cloud(1, 1889, CV_32FC3);
-    ifstream ifs("bunny.ply");
+    size_t pos = txt.find(ch);
+    size_t initialPos = 0;
+    strs.clear();
 
-    string str;
-    for(size_t i = 0; i < 12; ++i)
-        getline(ifs, str);
+    // Decompose statement
+    while (pos != std::string::npos)
+    {
+        strs.push_back(txt.substr(initialPos, pos - initialPos));
+        initialPos = pos + 1;
+        while(txt[initialPos] == ch)
+        {
+            initialPos++;
+        }
+        pos = txt.find(ch, initialPos);
+    }
 
-	float x=0.f;
-	float y=0.f;
-	float z=0.f;
+    // Add the last one
+    strs.push_back(txt.substr(initialPos, std::min(pos, txt.size()) - initialPos + 1));
 
-    Point3f* data = cloud.ptr<cv::Point3f>();
-    float dummy1, dummy2;
-    for(size_t i = 0; i < 1889; ++i)
-	{
-        ifs >> data[i].x >> data[i].y >> data[i].z >> dummy1 >> dummy2;
-
-		x+=data[i].x;
-		y+=data[i].y;
-		z+=data[i].z;
-	}
-
-
-	for(size_t i = 0; i < 1889; ++i)
-	{
-        
-
-		data[i].x-=x/1889;
-		data[i].y-=y/1889;
-		data[i].z-=z/1889;
-		
-	}
-	
-
-    cloud *= 5.0f;
-    return cloud;
+    return strs.size();
 }
 
-
-int transformations()
+size_t lines(string &obj_file_path)
 {
-    
+    ifstream ifs(obj_file_path, ifstream::in);
+    string str;
+    size_t n = 0;
+    while(ifs.good())
+    {
+        getline(ifs, str);
+        if (string::npos == str.find("v "))
+            continue;
+        n++;
+    }
+    return n;
+}
 
-    bool camera_pov = true;//false;
+void cvcloud_load(Mat &cloud, string &obj_file_path)
+{
+    ifstream ifs(obj_file_path, ifstream::in);
 
-    /// Create a window
+    Point3f *data = cloud.ptr<cv::Point3f>();
+    float x = 0.f;
+    float y = 0.f;
+    float z = 0.f;
+
+    string str;
+    int n = 0;
+    while (ifs.good())
+    {
+        getline(ifs, str);
+        cout << str << endl;
+
+        if (string::npos == str.find("v "))
+            continue;
+        vector<string> strs;
+        split_str(str, strs, ' ');
+
+        data->x = stof(strs[1]);
+        data->y = stof(strs[2]);
+        data->z = stof(strs[3]);
+        x += data->x;
+        y += data->y;
+        z += data->z;
+        cout << data->x << ", " << data->y << ", " << data->z << endl;
+        data++;
+        n++;
+    }
+
+    ifs.close();
+
+    Point3f *ptr = cloud.ptr<cv::Point3f>();
+    for (int i = 0; i < n; i++)
+    {
+        ptr->x -= x / n;
+        ptr->y -= y / n;
+        ptr->z -= z / n;
+        ptr++;
+    }
+   
+    cloud *= 5.0f;
+}
+
+int transformations(string &obj_file_path)
+{
+
+    bool camera_pov = true; //false;
+
+    // Create a window
     viz::Viz3d myWindow("Coordinate Frame");
 
-    /// Add coordinate axes
+    // Add coordinate axes
     myWindow.showWidget("Coordinate Widget", viz::WCoordinateSystem());
 
-    /// Let's assume camera has the following properties
-    Vec3d cam_pos(3.0f,3.0f,3.0f), cam_focal_point(3.0f,3.0f,2.0f), cam_y_dir(-1.0f,0.0f,0.0f);
+    // Let's assume camera has the following properties
+    Vec3d cam_pos(3.0f, 3.0f, 3.0f), cam_focal_point(3.0f, 3.0f, 2.0f), cam_y_dir(-1.0f, 0.0f, 0.0f);
 
-	
-    /// We can get the pose of the cam using makeCameraPose
+    // We can get the pose of the cam using makeCameraPose
     Affine3f cam_pose = viz::makeCameraPose(cam_pos, cam_focal_point, cam_y_dir);
 
-    /// We can get the transformation matrix from camera coordinate system to global using
-    /// - makeTransformToGlobal. We need the axes of the camera
-    Affine3f transform = viz::makeTransformToGlobal(Vec3f(0.0f,-1.0f,0.0f), Vec3f(-1.0f,0.0f,0.0f), Vec3f(0.0f,0.0f,-1.0f), cam_pos);
+    // We can get the transformation matrix from camera coordinate system to global using
+    // - makeTransformToGlobal. We need the axes of the camera
+    Affine3f transform = viz::makeTransformToGlobal(Vec3f(0.0f, -1.0f, 0.0f), Vec3f(-1.0f, 0.0f, 0.0f), Vec3f(0.0f, 0.0f, -1.0f), cam_pos);
 
-    /// Create a cloud widget.
-    Mat bunny_cloud = cvcloud_load();
+    // Create a cloud widget.
+    Mat bunny_cloud(1, lines(obj_file_path), CV_32FC3);
+    cvcloud_load(bunny_cloud, obj_file_path);
+    cout << "out of cvcloud_load" << endl;
     viz::WCloud cloud_widget(bunny_cloud, viz::Color::green());
-
-    /// Pose of the widget in camera frame
-    Affine3f cloud_pose = Affine3f().translate(Vec3f(0.0f,0.0f,3.0f));
-    /// Pose of the widget in global frame
+    cout << "line 205" << endl;
+    // Pose of the widget in camera frame
+    Affine3f cloud_pose = Affine3f().translate(Vec3f(0.0f, 0.0f, 3.0f));
+    // Pose of the widget in global frame
     Affine3f cloud_pose_global = transform * cloud_pose;
 
-    /// Visualize camera frame
+    // Visualize camera frame
     if (!camera_pov)
     {
-        viz::WCameraPosition cpw(0.5); // Coordinate axes
+        viz::WCameraPosition cpw(0.5);                               // Coordinate axes
         viz::WCameraPosition cpw_frustum(Vec2f(0.889484, 0.523599)); // Camera frustum
         myWindow.showWidget("CPW", cpw, cam_pose);
         myWindow.showWidget("CPW_FRUSTUM", cpw_frustum, cam_pose);
     }
 
-    /// Visualize widget
+    // Visualize widget
     myWindow.showWidget("bunny", cloud_widget, cloud_pose_global);
 
-    /// Set the viewer pose to that of camera
+    // Set the viewer pose to that of camera
     if (camera_pov)
         myWindow.setViewerPose(cam_pose);
 
-    /// Start event loop.
+    // Start event loop.
     myWindow.spin();
 
     return 0;
 }
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
-	//ビルドインフォメーションの表示
-	std::cout<<getBuildInformation();
+    // std::cout << getBuildInformation();
 
-	//launching_Viz();
+    // launching_Viz();
 
-	//Pose_of_a_widget();
-	
-	transformations();
+    // Pose_of_a_widget();
+
+    if (argc != 2)
+    {
+        cerr << "Usage: " << argv[0] << " <obj_file_path>" << endl;
+        exit(-1);
+    }
+
+    string obj_file_path = argv[1];
+    transformations(obj_file_path);
 
     return 0;
 }
