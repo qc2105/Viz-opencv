@@ -197,9 +197,13 @@ int transformations(string &obj_file_path)
     Mat bunny_cloud(1, lines(obj_file_path, string("v ")), CV_32FC3);
     cvcloud_load(bunny_cloud, obj_file_path);
 
-    cout << "out of cvpolygons_load" << endl;
+    
     viz::WCloud cloud_widget(bunny_cloud, viz::Color::green());
-    cout << "line 202" << endl;
+
+    Mat poly_cloud(1, lines(obj_file_path, string("f ")), CV_32FC3);
+    viz::Mesh mesh = viz::Mesh::load(obj_file_path, 2);
+    viz::WMesh mesh_widget(mesh.cloud, mesh.polygons);
+    
     // Pose of the widget in camera frame
     Affine3f cloud_pose = Affine3f().translate(Vec3f(0.0f, 0.0f, 3.0f));
     // Pose of the widget in global frame
@@ -215,7 +219,8 @@ int transformations(string &obj_file_path)
     }
 
     // Visualize widget
-    myWindow.showWidget("bunny", cloud_widget, cloud_pose_global);
+    myWindow.showWidget("test", cloud_widget, cloud_pose_global);
+    myWindow.showWidget("bunny", mesh_widget, cloud_pose_global);
 
     // Set the viewer pose to that of camera
     if (camera_pov)
