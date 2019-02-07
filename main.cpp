@@ -9,6 +9,7 @@
 
 using namespace cv;
 using namespace std;
+
 #define CV_VERSION_NUMBER       \
     CVAUX_STR(CV_MAJOR_VERSION) \
     CVAUX_STR(CV_MINOR_VERSION) \
@@ -91,39 +92,49 @@ void Pose_of_a_widget()
     }
 }
 
-void cvpolygons_load(Mat &polygons, string &obj_file_path)
+void cvfaces_load(Mat &cloud, vector<viz::WLine> & lines, string &obj_file_path)
 {
-    ifstream ifs(obj_file_path, ifstream::in);
+	ifstream ifs(obj_file_path, ifstream::in);
 
-    Point3f *data = polygons.ptr<cv::Point3f>();
-    float x = 0.f;
-    float y = 0.f;
-    float z = 0.f;
+	string str;
+	int n = 0;
+	int point1_index;
+	int point2_index;
+	int point3_index;
 
-    string str;
-    int n = 0;
-    while (ifs.good())
-    {
-        getline(ifs, str);
-        cout << str << endl;
+	while (ifs.good())
+	{
+		getline(ifs, str);
+		cout << str << endl;
 
-        if (string::npos == str.find("f "))
-            continue;
-        vector<string> strs;
-        split_str(str, strs, ' ');
+		if (string::npos == str.find("f "))
+			continue;
+		vector<string> strs;
+		split_str(str, strs, ' ');
 
-        data->x = stof(strs[1]);
-        data->y = stof(strs[2]);
-        data->z = stof(strs[3]);
-        x += data->x;
-        y += data->y;
-        z += data->z;
-        cout << data->x << ", " << data->y << ", " << data->z << endl;
-        data++;
-        n++;
-    }
+		point1_index = stof(strs[1]);
+		point2_index = stof(strs[2]);
+		point3_index = stof(strs[3]);
 
-    ifs.close();
+		Point3f point1 = cloud.at<Vec3f>(0, point1_index - 1);
+		Point3f point2 = cloud.at<Vec3f>(0, point2_index - 1);
+		Point3f point3 = cloud.at<Vec3f>(0, point3_index - 1);
+
+		cout << point1 << ": " << point2 << ": " << point3;
+
+		viz::WLine line1 = viz::WLine(point1, point2, viz::Color::silver());
+		viz::WLine line2 = viz::WLine(point2, point3, viz::Color::silver());
+		viz::WLine line3 = viz::WLine(point3, point1, viz::Color::silver());
+
+		lines.push_back(line1);
+		lines.push_back(line2);
+		lines.push_back(line3);
+		
+		cout << point1_index << ", " << point2_index << ", " << point3_index << endl;
+		n++;
+	}
+
+	ifs.close();
 }
 
 void cvcloud_load(Mat &cloud, string &obj_file_path)
@@ -172,12 +183,12 @@ void cvcloud_load(Mat &cloud, string &obj_file_path)
     ifs.close();
 
 	Point3f *ptr = cloud.ptr<cv::Point3f>();
-	for (int i = 0; i < n; i++)
+	/*for (int i = 0; i < n; i++)
 	{
 		ptr->y = maxY - ptr->y;
 		ptr->z = maxZ - ptr->z;
 		ptr++;
-	}
+	}*/
 
     ptr = cloud.ptr<cv::Point3f>();
     for (int i = 0; i < n; i++)
@@ -214,7 +225,9 @@ int transformations(string &obj_file_path)
 
     // Create a cloud widget.
     Mat bunny_cloud(1, nlines(obj_file_path, string("v ")), CV_32FC3);
+	vector<viz::WLine> faces;
     cvcloud_load(bunny_cloud, obj_file_path);
+	cvfaces_load(bunny_cloud, faces, obj_file_path);
 	viz::WLine lineX = viz::WLine(Point3d(0, 0, 0), Point3d(800, 0, 0), viz::Color::red());
 	viz::WLine lineY = viz::WLine(Point3d(0, 0, 0), Point3d(0, 800, 0), viz::Color::green());
 	viz::WLine lineZ = viz::WLine(Point3d(0, 0, 0), Point3d(0, 0, 800), viz::Color::blue());
@@ -242,10 +255,14 @@ int transformations(string &obj_file_path)
 
     // Visualize widget
     myWindow.showWidget("test", cloud_widget, cloud_pose_global);
-    myWindow.showWidget("bunny", mesh_widget, cloud_pose_global);
+    //myWindow.showWidget("bunny", mesh_widget, cloud_pose_global);
 	myWindow.showWidget("lineX", lineX, cloud_pose_global);
 	myWindow.showWidget("lineY", lineY, cloud_pose_global);
 	myWindow.showWidget("lineZ", lineZ, cloud_pose_global);
+	for (int n = 0; n < faces.size(); n++)
+	{
+		myWindow.showWidget(std::to_string(n), faces.at(n), cloud_pose_global);
+	}
 
     // Set the viewer pose to that of camera
     if (camera_pov)
