@@ -1,4 +1,5 @@
 #include "utils.hpp"
+#include <algorithm>
 
 size_t split_str(const std::string &txt, vector<std::string> &strs, char ch)
 {
@@ -24,7 +25,7 @@ size_t split_str(const std::string &txt, vector<std::string> &strs, char ch)
     return strs.size();
 }
 
-size_t lines(string &obj_file_path, string marker)
+size_t nlines(string &obj_file_path, string marker)
 {
     ifstream ifs(obj_file_path, ifstream::in);
     string str;

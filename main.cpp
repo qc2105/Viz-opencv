@@ -137,6 +137,9 @@ void cvcloud_load(Mat &cloud, string &obj_file_path)
 
     string str;
     int n = 0;
+	float maxY = 0.f;
+	float maxZ = 0.f;
+
     while (ifs.good())
     {
         getline(ifs, str);
@@ -152,7 +155,15 @@ void cvcloud_load(Mat &cloud, string &obj_file_path)
         data->z = stof(strs[3]);
         x += data->x;
         y += data->y;
+		if (data->y > maxY)
+		{
+			maxY = data->y;
+		}
         z += data->z;
+		if (data->z > maxZ)
+		{
+			maxZ = data->z;
+		}
         cout << data->x << ", " << data->y << ", " << data->z << endl;
         data++;
         n++;
@@ -160,7 +171,15 @@ void cvcloud_load(Mat &cloud, string &obj_file_path)
 
     ifs.close();
 
-    Point3f *ptr = cloud.ptr<cv::Point3f>();
+	Point3f *ptr = cloud.ptr<cv::Point3f>();
+	for (int i = 0; i < n; i++)
+	{
+		ptr->y = maxY - ptr->y;
+		ptr->z = maxZ - ptr->z;
+		ptr++;
+	}
+
+    ptr = cloud.ptr<cv::Point3f>();
     for (int i = 0; i < n; i++)
     {
         ptr->x -= x / n;
@@ -194,13 +213,16 @@ int transformations(string &obj_file_path)
     Affine3f transform = viz::makeTransformToGlobal(Vec3f(0.0f, -1.0f, 0.0f), Vec3f(-1.0f, 0.0f, 0.0f), Vec3f(0.0f, 0.0f, -1.0f), cam_pos);
 
     // Create a cloud widget.
-    Mat bunny_cloud(1, lines(obj_file_path, string("v ")), CV_32FC3);
+    Mat bunny_cloud(1, nlines(obj_file_path, string("v ")), CV_32FC3);
     cvcloud_load(bunny_cloud, obj_file_path);
+	viz::WLine lineX = viz::WLine(Point3d(0, 0, 0), Point3d(800, 0, 0), viz::Color::red());
+	viz::WLine lineY = viz::WLine(Point3d(0, 0, 0), Point3d(0, 800, 0), viz::Color::green());
+	viz::WLine lineZ = viz::WLine(Point3d(0, 0, 0), Point3d(0, 0, 800), viz::Color::blue());
 
     
     viz::WCloud cloud_widget(bunny_cloud, viz::Color::green());
 
-    Mat poly_cloud(1, lines(obj_file_path, string("f ")), CV_32FC3);
+    Mat poly_cloud(1, nlines(obj_file_path, string("f ")), CV_32FC3);
     viz::Mesh mesh = viz::Mesh::load(obj_file_path, 2);
     viz::WMesh mesh_widget(mesh.cloud, mesh.polygons);
     
@@ -221,6 +243,9 @@ int transformations(string &obj_file_path)
     // Visualize widget
     myWindow.showWidget("test", cloud_widget, cloud_pose_global);
     myWindow.showWidget("bunny", mesh_widget, cloud_pose_global);
+	myWindow.showWidget("lineX", lineX, cloud_pose_global);
+	myWindow.showWidget("lineY", lineY, cloud_pose_global);
+	myWindow.showWidget("lineZ", lineZ, cloud_pose_global);
 
     // Set the viewer pose to that of camera
     if (camera_pov)
